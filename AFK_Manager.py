@@ -7,7 +7,17 @@ from tkinter import scrolledtext, messagebox, ttk
 import base64
 import json
 import os
-import winreg 
+import winreg
+import urllib.request
+import subprocess
+
+# --- PROJECT CONFIGURATION ---
+# CURRENT_VERSION: Change this to "1.1", "1.2", etc. when you make updates.
+CURRENT_VERSION = "1.1"
+
+# DIRECT RAW LINKS TO YOUR REPO (RBx9/TS3)
+VERSION_URL = "https://raw.githubusercontent.com/RBx9/TS3/main/version.txt"
+EXE_DOWNLOAD_URL = "https://github.com/RBx9/TS3/raw/main/AFK_Manager.exe"
 
 # --- SETTINGS FILE ---
 SETTINGS_FILE = "bot_settings.json"
@@ -69,7 +79,7 @@ class SimpleTS3:
 class ModernBotGUI:
     def __init__(self, root):
         self.root = root
-        self.root.title("TS3 AFK Manager Pro")
+        self.root.title(f"TS3 AFK Manager Pro v{CURRENT_VERSION}")
         self.root.geometry("500x820") 
         self.root.configure(bg="#2b2b2b")
         self.root.protocol("WM_DELETE_WINDOW", self.on_close)
@@ -94,6 +104,10 @@ class ModernBotGUI:
         self.setup_ui()
         self.load_settings()
         
+        # --- AUTO UPDATE CHECK ---
+        # Run check in background so app opens instantly
+        threading.Thread(target=self.check_for_updates, daemon=True).start()
+
         # AUTO START CHECK
         if self.var_autostart.get():
             self.log_message("[SYSTEM] Auto-Start Enabled. Launching in 3s...")
@@ -107,7 +121,7 @@ class ModernBotGUI:
         header = tk.Frame(self.root, bg=self.COLORS["bg"], pady=15)
         header.pack(fill="x")
         tk.Label(header, text="AFK MANAGER", font=("Segoe UI", 16, "bold"), bg=self.COLORS["bg"], fg=self.COLORS["accent"]).pack()
-        tk.Label(header, text="Ultimate Edition", font=("Segoe UI", 8), bg=self.COLORS["bg"], fg="#666").pack()
+        tk.Label(header, text=f"Version {CURRENT_VERSION}", font=("Segoe UI", 8), bg=self.COLORS["bg"], fg="#666").pack()
 
         # Cards
         self.create_card("Live Controls", self.setup_controls)
@@ -179,15 +193,62 @@ class ModernBotGUI:
                                   activebackground=self.COLORS["card"], activeforeground="white", font=("Segoe UI", 10))
         chk_auto.pack(anchor="w")
 
+    # --- UPDATE LOGIC ---
+    def check_for_updates(self):
+        # Skip if links are default or invalid
+        if "YOUR_USER" in VERSION_URL: return
+        try:
+            self.log_message("[UPDATE] Checking for updates...")
+            # 1. Download version.txt
+            with urllib.request.urlopen(VERSION_URL, timeout=5) as response:
+                latest_version = response.read().decode('utf-8').strip()
+            
+            # 2. Compare Versions
+            if float(latest_version) > float(CURRENT_VERSION):
+                self.log_message(f"[UPDATE] New version found: {latest_version}")
+                if messagebox.askyesno("Update Available", f"Version {latest_version} is available.\nDo you want to update now?"):
+                    self.perform_update()
+            else:
+                self.log_message("[UPDATE] App is up to date.")
+        except Exception as e:
+            self.log_message(f"[UPDATE] Check failed: {e}")
+
+    def perform_update(self):
+        try:
+            self.log_message("[UPDATE] Downloading new version...")
+            # 1. Download the new EXE as 'new_ver.exe'
+            new_exe_name = "new_ver.exe"
+            urllib.request.urlretrieve(EXE_DOWNLOAD_URL, new_exe_name)
+            
+            # 2. Create the BAT script to swap files
+            current_exe = sys.executable
+            batch_script = f"""
+@echo off
+timeout /t 2 /nobreak >nul
+del "{current_exe}"
+ren "{new_exe_name}" "{os.path.basename(current_exe)}"
+start "" "{current_exe}"
+del "%~f0"
+            """
+            
+            with open("updater.bat", "w") as f:
+                f.write(batch_script)
+
+            # 3. Launch script and exit
+            self.log_message("[UPDATE] Restarting to apply...")
+            subprocess.Popen("updater.bat", shell=True)
+            self.root.quit()
+        except Exception as e:
+            self.log_message(f"[UPDATE] Update failed: {e}")
+
     # --- REGISTRY LOGIC ---
     def set_startup_registry(self):
         try:
             key_path = r"Software\Microsoft\Windows\CurrentVersion\Run"
             key = winreg.OpenKey(winreg.HKEY_CURRENT_USER, key_path, 0, winreg.KEY_ALL_ACCESS)
-            
             app_name = "AFK_Manager_Pro"
             
-            # Determine if running as exe or py script
+            # Use sys.executable if frozen (exe), else use __file__
             if getattr(sys, 'frozen', False):
                 exe_path = sys.executable
             else:
@@ -200,7 +261,7 @@ class ModernBotGUI:
                 try:
                     winreg.DeleteValue(key, app_name)
                     self.log_message("[SYSTEM] Startup Registry Removed.")
-                except FileNotFoundError: pass 
+                except FileNotFoundError: pass
             
             winreg.CloseKey(key)
         except Exception as e:
@@ -242,11 +303,9 @@ class ModernBotGUI:
         else: self.default_fill()
 
     def default_fill(self):
-        # --- CLEAN DEFAULT SETTINGS ---
         self.entry_host.insert(0, "") 
         self.entry_user.insert(0, "")
         self.entry_pass.insert(0, "")
-        
         self.entry_cid.insert(0, "9")
         self.entry_time.insert(0, "900") 
         self.entry_exempt.insert(0, "6, 10")
@@ -269,10 +328,8 @@ class ModernBotGUI:
             self.live_config['CID'] = int(self.entry_cid.get())
             self.live_config['TIME'] = int(self.entry_time.get())
             self.live_config['POKE'] = self.var_poke.get()
-            
             raw_exempt = self.entry_exempt.get()
             self.live_config['EXEMPT'] = [int(x.strip()) for x in raw_exempt.split(',') if x.strip().isdigit()]
-            
             self.log_message(f"[CONFIG] Updated: ID={self.live_config['CID']} | Poke={self.live_config['POKE']}")
             self.save_settings()
         except: messagebox.showerror("Error", "Please check your inputs.")
@@ -350,7 +407,7 @@ class ModernBotGUI:
         finally:
             self.log_message("[SYSTEM] Engine Stopped.")
             self.is_running = False
-            self.root.after(0, lambda: self.btn_start.config(state="normal", bg=self.COLORS["success"]))
+            self.root.after(0, lambda: self.btn_start.config(state="normal", bg="#00a8ff"))
             self.root.after(0, lambda: self.btn_stop.config(state="disabled", bg="#4a4a4a"))
 
 if __name__ == "__main__":
