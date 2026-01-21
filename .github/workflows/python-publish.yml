@@ -32,7 +32,7 @@ jobs:
     - name: Build EXE
       # This builds your specific file with the icon
       run: |
-        pyinstaller --onefile --noconsole --icon=app.ico AFK_Manager.py
+        pyinstaller --onefile --noconsole --icon=icon.ico AFK_Manager.py
 
     - name: Move EXE to Root
       # Moves the finished EXE from the 'dist' folder to your main folder
