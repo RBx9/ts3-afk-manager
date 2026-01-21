@@ -195,21 +195,28 @@ class ModernBotGUI:
 
     # --- UPDATE LOGIC ---
     def check_for_updates(self):
-        # Skip if links are default or invalid
         if "YOUR_USER" in VERSION_URL: return
         try:
             self.log_message("[UPDATE] Checking for updates...")
-            # 1. Download version.txt
             with urllib.request.urlopen(VERSION_URL, timeout=5) as response:
-                latest_version = response.read().decode('utf-8').strip()
-            
-            # 2. Compare Versions
-            if float(latest_version) > float(CURRENT_VERSION):
-                self.log_message(f"[UPDATE] New version found: {latest_version}")
-                if messagebox.askyesno("Update Available", f"Version {latest_version} is available.\nDo you want to update now?"):
+                latest_version_str = response.read().decode('utf-8').strip()
+
+            # --- NEW COMPARISON LOGIC (Handles 1.4.1 vs 1.4.0) ---
+            # Helper function to convert "1.4.1" -> [1, 4, 1]
+            def parse_version(v):
+                return [int(x) for x in v.split('.')]
+
+            current_ver = parse_version(CURRENT_VERSION)
+            latest_ver = parse_version(latest_version_str)
+
+            if latest_ver > current_ver:
+                self.log_message(f"[UPDATE] New version found: {latest_version_str}")
+                if messagebox.askyesno("Update Available", f"Version {latest_version_str} is available.\nDo you want to update now?"):
                     self.perform_update()
             else:
                 self.log_message("[UPDATE] App is up to date.")
+            # ------------------------------------------------------
+
         except Exception as e:
             self.log_message(f"[UPDATE] Check failed: {e}")
 
