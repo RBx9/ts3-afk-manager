@@ -12,7 +12,7 @@ import urllib.request
 import subprocess
 
 # --- PROJECT CONFIGURATION ---
-CURRENT_VERSION = "1.3"
+CURRENT_VERSION = "1.4"
 
 # DIRECT RAW LINKS TO YOUR REPO
 # Updated to match your new 'ts3-afk-manager' repo
