@@ -31,7 +31,7 @@ jobs:
 
     - name: Build EXE
       run: |
-        pyinstaller --onefile --noconsole --icon=ico.ico AFK_Manager.py
+        pyinstaller --onefile --noconsole --icon=icon.ico AFK_Manager.py
 
     - name: Move EXE to Root
       # This effectively deletes the old file and moves the new one safely
