@@ -34,10 +34,10 @@ jobs:
       run: |
         pyinstaller --onefile --noconsole --icon=icon.ico AFK_Manager.py
 
-    - name: Move EXE to Root
-      # Moves the finished EXE from the 'dist' folder to your main folder
+- name: Move EXE to Root
+      # Added -Force so it overwrites the old version
       run: |
-        move dist\AFK_Manager.exe AFK_Manager.exe
+        move dist\AFK_Manager.exe AFK_Manager.exe -Force
 
     - name: Commit and Push EXE
       # This uploads the new EXE back to your repo
