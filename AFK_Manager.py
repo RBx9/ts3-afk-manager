@@ -12,12 +12,12 @@ import urllib.request
 import subprocess
 
 # --- PROJECT CONFIGURATION ---
-# CURRENT_VERSION: Change this to "1.1", "1.2", etc. when you make updates.
-CURRENT_VERSION = "1.1"
+CURRENT_VERSION = "1.3"
 
-# DIRECT RAW LINKS TO YOUR REPO (RBx9/TS3)
-VERSION_URL = "https://raw.githubusercontent.com/RBx9/TS3/main/version.txt"
-EXE_DOWNLOAD_URL = "https://github.com/RBx9/TS3/raw/main/AFK_Manager.exe"
+# DIRECT RAW LINKS TO YOUR REPO
+# Updated to match your new 'ts3-afk-manager' repo
+VERSION_URL = "https://raw.githubusercontent.com/RBx9/ts3-afk-manager/refs/heads/main/version.txt"
+EXE_DOWNLOAD_URL = "https://github.com/RBx9/ts3-afk-manager/raw/refs/heads/main/AFK_Manager.exe"
 
 # --- SETTINGS FILE ---
 SETTINGS_FILE = "bot_settings.json"
