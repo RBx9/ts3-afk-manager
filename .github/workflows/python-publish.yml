@@ -1,12 +1,12 @@
 name: Auto-Build EXE
 
-# Trigger: Run this whenever you push to the 'main' branch
 on:
   push:
     branches: [ "main" ]
     paths:
-      - '**.py'          # Run if python file changes
-      - 'version.txt'    # Run if version changes
+      - '**.py'
+      - 'version.txt'
+  workflow_dispatch:
 
 permissions:
   contents: write
@@ -29,21 +29,17 @@ jobs:
         python -m pip install --upgrade pip
         pip install pyinstaller
 
-- name: Move EXE to Root
+    - name: Build EXE
       run: |
-        # Step 1: Nuke the old file if it exists
-        if (Test-Path AFK_Manager.exe) { Remove-Item AFK_Manager.exe -Force }
-        
-        # Step 2: Move the new file into the empty spot
-        Move-Item dist\AFK_Manager.exe AFK_Manager.exe
+        pyinstaller --onefile --noconsole --icon=app.ico AFK_Manager.py
 
-- name: Move EXE to Root
-      # Added -Force so it overwrites the old version
+    - name: Move EXE to Root
+      # This effectively deletes the old file and moves the new one safely
       run: |
-        move dist\AFK_Manager.exe AFK_Manager.exe -Force
+        Remove-Item -Path AFK_Manager.exe -ErrorAction SilentlyContinue
+        Move-Item -Path dist\AFK_Manager.exe -Destination AFK_Manager.exe
 
     - name: Commit and Push EXE
-      # This uploads the new EXE back to your repo
       run: |
         git config --global user.name "GitHub Actions Builder"
         git config --global user.email "actions@github.com"
