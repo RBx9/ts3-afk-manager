@@ -29,10 +29,13 @@ jobs:
         python -m pip install --upgrade pip
         pip install pyinstaller
 
-    - name: Build EXE
-      # This builds your specific file with the icon
+- name: Move EXE to Root
       run: |
-        pyinstaller --onefile --noconsole --icon=icon.ico AFK_Manager.py
+        # Step 1: Nuke the old file if it exists
+        if (Test-Path AFK_Manager.exe) { Remove-Item AFK_Manager.exe -Force }
+        
+        # Step 2: Move the new file into the empty spot
+        Move-Item dist\AFK_Manager.exe AFK_Manager.exe
 
 - name: Move EXE to Root
       # Added -Force so it overwrites the old version
